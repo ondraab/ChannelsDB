@@ -1,0 +1,266 @@
+body {
+    font-size: 14px;
+    font-family: 'Open Sans', sans-serif;
+    cursor: default;
+}
+
+/********************************************************************************************/
+
+.channels-db-header {
+    background: #cdcdcd;
+    padding: 6px 12px;
+    position: relative;
+    font-weight: bold;
+    font-size: larger;
+}
+
+.channels-db-id {
+    font-weight: normal;
+}
+
+    .channels-db-id small {
+        color: #424242;
+    }
+
+.channels-db-body {
+    position: relative;
+    background: #ededed;
+}
+
+.channels-db-left-pane {
+    padding: 0 6px;
+    background: white;
+    -moz-box-sizing: padding-box;
+    -webkit-box-sizing: padding-box;
+    box-sizing: padding-box;
+}
+
+.channels-db-right-pane {
+    height: 100%;
+}
+
+@media (min-width: 992px) {
+    .channels-db-left-pane {
+        width: 300px;
+        border-right: 1px solid #cdcdcd;
+    }
+
+    .channels-db-right-pane {
+        position: absolute;
+        top: 0;
+        left: 301px;
+        right: 0;
+    }
+
+    .channels-db-thumb {
+        width: 100%;
+        height: 300px;
+    }
+}
+
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .channels-db-left-pane {
+        width: 200px;
+        border-right: 1px solid #cdcdcd;
+    }
+
+    .channels-db-right-pane {
+        position: absolute;
+        top: 0;
+        left: 201px;
+        right: 0;
+    }
+
+    .channels-db-thumb {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+@media (min-width: 768px) {
+    .channels-db-list {
+        height: 100%;
+        overflow-y: scroll;
+        padding: 12px 18px 0 18px;
+    }
+}
+
+@media (max-width: 767px) {
+    .channels-db-thumb {
+        width: 400px;
+        height: 300px;
+    }
+
+    .channels-db-list {
+        padding: 24px 18px 12px 18px;
+    }
+}
+
+.channels-db-list {
+    margin: 0;
+    list-style: none;
+    -moz-box-sizing: padding-box;
+    -webkit-box-sizing: padding-box;
+    box-sizing: padding-box;
+}
+
+    .channels-db-list li {
+        margin-bottom: 12px;
+        border: 1px solid #cdcdcd;
+    }
+
+        .channels-db-list li > div:first-child {
+            padding: 6px 12px 6px 0;
+            background: #cdcdcd;
+            position: relative;
+        }
+
+            .channels-db-list li > div:first-child > div:first-child {
+                background: #bdbdbd;
+                font-weight: bold;
+                padding: 6px 0;
+                width: 42px;
+                text-align: center;
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 1px;
+            }
+
+            .channels-db-list li > div:first-child > div:not(:first-child) {
+                margin-left: 54px;
+            }
+
+.channels-db-channel-body {
+    position: relative;
+    background: #e3e3e3;
+}
+
+    .channels-db-channel-body > div:first-child {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+    }
+
+.channels-db-channel-body-content {
+    padding: 6px 12px 6px 20px;
+}
+
+
+.channels-db-channel-layers-wrapper > div:first-child {
+    width: 70px;
+    background: #bdbdbd;
+    float: left;
+    text-align: center;
+    height: 20px;
+    line-height: 20px;
+    display: inline-block;
+    font-size: smaller;
+    font-weight: bold;
+}
+
+.channels-db-channel-layers {
+    height: 20px;
+    position: relative;
+    margin-left: 71px;
+}
+
+    .channels-db-channel-layers > div {
+        float: left;
+        height: 20px;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+        .channels-db-channel-layers > div:not(:first-child) {
+            border-left: 1px solid #ededed;
+        }
+
+.channels-db-channel-layer-info {
+    visibility: hidden;
+    position: absolute;
+    top: -52px;
+    height: 50px;
+    left: -1px;
+    right: -1px;
+    border: 1px solid #cdcdcd;
+    background: #ededed;
+}
+
+    .channels-db-channel-layer-info > div:last-child {
+        position: absolute;
+        bottom: 0;
+        height: 4px;
+        left: 0;
+        right: 0;
+    }
+
+
+.channels-db-channel-layers > div:hover .channels-db-channel-layer-info {
+    visibility: visible;
+}
+
+.channels-db-thumb {
+    max-width: 300px;
+    margin: 0 auto;
+    /*-webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, .8);
+    -moz-box-shadow: inset 0 0 1px rgba(0, 0, 0, .8);
+    box-shadow: inset 0 0 1px rgba(0, 0, 0, .8);*/
+}
+
+.channels-db-footer {
+    background: #cdcdcd;
+    padding: 6px 12px;
+    position: relative;
+    font-size: smaller;
+}
+
+
+.channels-db-powered {
+    float: right;
+}
+
+.channels-db-delimiter {
+    color: #999;
+}
+
+.channels-db-right-pane-error {
+    position: absolute;
+    font-weight: bold;
+    font-size: larger;
+    color: darkred;
+    margin: 24px;
+}
+
+.channels-db-channel-layer-info-unit {
+    position: absolute;
+    top: 0;
+    line-height: 22px;
+    width: 80px;
+    margin-left: 16px;
+    border-right: 1px solid #cdcdcd;
+}
+
+.channels-db-channel-layer-info-bottleneck {
+    padding: 2px 4px;
+    background: #383838;
+    color: white;
+    -moz-box-sizing: padding-box;
+    -webkit-box-sizing: padding-box;
+    box-sizing: border-box;
+    float: right;
+    top: 0;
+    bottom: 0;
+}
+
+.channels-db-channel-layer-info-residues {
+    position: absolute;
+    right: 0;
+    left: 178px;
+    top: 0;
+    margin-left: 20px;   
+}
