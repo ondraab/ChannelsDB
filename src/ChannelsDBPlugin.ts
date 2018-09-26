@@ -148,16 +148,10 @@ class ChannelsDBPlugin extends PolymerElement {
             this.subtitle = this.createSubtitle(this.channelsJson);
             this.imgSrc = `https://webchem.ncbr.muni.cz/API/ChannelsDB/Download/${this.pdbId}?type=png`;
             super.connectedCallback();
-        });
+            this.addChannelsReview();
+    });
         request.send(null);
 
-    }
-
-    static get channelLength(length: number) {
-        if (length)
-            return length;
-        else
-            return 1;
     }
 
     static get getChannelReview() {
@@ -171,7 +165,7 @@ class ChannelsDBPlugin extends PolymerElement {
 								Length:
 							</span>
                                     </b>
-                                    ${this.channelLength()}
+                                    
                                     {{channel.Length | number: 1}}&#8491;
 
                                     <span class="channels-db-delimiter">|</span>
@@ -307,6 +301,15 @@ class ChannelsDBPlugin extends PolymerElement {
         }
     }
 
+    static charge() {
+        console.log('nana');
+        return html``
+    }
+
+    static computeFilter(item: any) {
+        console.log(item);
+    }
+
     static get template() {
         // language=HTML
         return html`
@@ -330,140 +333,7 @@ class ChannelsDBPlugin extends PolymerElement {
                     <!--<div ng-show="isError" class="channels-db-right-pane-error">Error: {{error}}</div>-->
 
                     <ul class="channels-db-list">
-
-                        <template is="dom-repeat" id="menu" items="{{channelsJson}}">
-                            <li>
-                                <div>
-                                    <div>#[[index]]</div>
-                                    <div>
-                                        <b>
-                                            <span class="hint--bottom" data-hint="Length of the channel [&#8491;].">
-                                                Length:
-                                            </span>
-                                        </b>{{item.Length}}&#8491;
-                                        <span class="channels-db-delimiter">|</span>
-                                        <b>
-                                            <span class="hint--bottom hint--large" 
-                                                  data-hint="Channel's hydropathy is an average hydropathy index 
-                                                  assigned to the lining residues according to the Kyte and Doolitle.">
-                                            HPthy:
-                            </span>
-                            </b>
-                            {{item.Properties.Hydropathy}}
-
-                            <span class="channels-db-delimiter">|</span>
-                            <b>
-                            <span class="hint--bottom hint--large" data-hint="Charge is calculated as a sum of charged residues (Arg, Lys = +1; Asp, Glu = -1)">
-                            Charge:
-                            </span>
-                            </b>
-                            {{item.Properties.Charge > 0? '+': ''}}{{item.Properties.Charge}}
-                            <span style="float: right; font-weight: 200;">{{item.Name}}</span>
-                            </div>
-
-                            </div>
-
-                            <div class="channels-db-channel-body">
-                            <!--<div style="background: #{{channel.Color}}"></div>-->
-
-                            <div class="channels-db-channel-body-content">
-                            <div style="position: relative">
-                            <b>Bottleneck:</b>
-
-                            <span class="hint--bottom" data-hint="Channels's lowest profile: radius / length">
-                            {{bottlenecks[$index].MinRadius | number: 1}} / {{(bottlenecks[$index].EndDistance - bottlenecks[$index].StartDistance) | number: 1}}
-                            </span>
-                            <span class="channels-db-delimiter">|</span>
-                            <span class="hint--bottom" data-hint="Hydropathy of the bottleneck.">
-                            {{bottlenecks[$index].Properties.Hydropathy | number: 2}}
-                            </span>
-                            <span class="channels-db-delimiter">|</span>
-                            <span class="hint--bottom" data-hint="Formal charge of the bottleneck.">
-                            {{item.Properties.Charge > 0? '+': ''}}{{bottlenecks[$index].Properties.Charge}}
-                            </span>
-                            <span class="channels-db-delimiter">|</span>
-                            <span class="hint--bottom" data-hint="Bottleneck lining residues.">
-                            {{liningResiduesString(bottlenecks[$index].Residues) | cut:true:10:' ...' }}
-                            </span>
-                            </div>
-
-
-                            <div>
-                            <b>Lining:</b>
-                            <span class="hint--top" data-hint="Sidechain lining residues">
-                            {{calculateLining(item, false) | cut:true:200:'...' }}
-                            </span>
-                            <!--<span ng-show="{{calculateLining(channel, true).length > 0}}" class="channels-db-delimiter">|</span>-->
-                            <span class="hint--top" data-hint="Backbone lining residues">
-                            {{calculateLining(item, true) | cut:true:200:'...' }}
-                            </span>
-
-
-
-                            </div>
-                            </div>
-                            </div>
-
-                            <div class="channels-db-channel-layers-wrapper">
-
-                            <div class="hint--right hint--large" data-hint="The channel is uniformly divided into layers, and each layer is defined by the residues lining it. A new layer starts whenever there is a change in the list of residues lining the channel along its length.">
-                            Layers
-                            </div>
-
-                            <div class="channels-db-channel-layers">
-                            <!--<div ng-repeat="layer in channel.wrappedLayers"-->
-                            style="width: {{ layer.computedWidth }}%; background-color:{{ layer.color }};
-                            border-bottom: {{layer.layer.LocalMinima ? '3px' : '0'}} solid {{layer.layer.Bottleneck ? 'black' : '	#666666'}}">
-
-                            <div class="channels-db-channel-layer-info">
-                            <div style="left: 0;" class="channels-db-channel-layer-info-unit">
-                            <div><small><b>Radius:</b> {{layer.layer.MinRadius | number: 1}}&#8491;</small></div>
-                            <div><small><b>Length:</b> {{layer.layer.EndDistance - layer.layer.StartDistance | number: 1}}&#8491;</small></div>
-                            </div>
-                            <div style="left: 96px;" class="channels-db-channel-layer-info-unit">
-                            <div><small><b>Hpthy:</b> {{layer.layer.Properties.Hydropathy | number: 2}}</small></div>
-                            <div><small><b>Charge:</b> {{layer.layer.Properties.Charge > 0? '+': ''}}{{layer.layer.Properties.Charge}}</small></div>
-                            </div>
-                            <div class="channels-db-channel-layer-info-residues">
-                            <!--<span ng-repeat="residue in layer.layer.Residues">-->
-                            <!--
-                            -->
-                            <!--<small ng-if="residue.Backbone">-->
-                            <!--
-                            -->
-                            <b>
-                            <!--
-                            -->
-                            <span class="hint--top" data-hint="Backbone">
-                            <!--
-                            -->
-                            {{residue.Name}} {{residue.SequenceNumber}}{{residue.Chain}}{{$last? '' : ' &ndash; '}}
-                            <!--
-                            -->
-                            </span>
-                            <!--
-                            -->
-                            </b>
-                            <!--
-                            -->
-                            </small>
-                            <!--
-                            -->
-                            <!--<small ng-if="!residue.Backbone">{{residue.Name}} {{residue.SequenceNumber}}{{residue.Chain}}{{$last? '' : ' &ndash; '}}</small>-->
-                            <!--
-                            -->
-                            </span>
-                            <!--<div ng-show="{{layer.layer.Bottleneck}}" class="channels-db-channel-layer-info-bottleneck">Bottleneck</div>-->
-                            <!--<div ng-show="{{layer.layer.LocalMinima && !layer.layer.Bottleneck}}" class="channels-db-channel-layer-info-bottleneck">Local minimum</div>-->
-                            </div>
-                            <div style="background: {{ layer.color }}"></div>
-                            </div>
-
-                            </div>
-                            </div>
-                            </div>
-                            </li>
-                        </template>
+                        
                     </ul>
                 </div>
 
@@ -474,6 +344,73 @@ class ChannelsDBPlugin extends PolymerElement {
                 <!--<a target="_blank" href="{{link}}">[+ Custom analysis]</a>-->
             </div>
         `
+    }
+
+    public addChannelsReview() {
+        let ul = document.querySelector('channelsdb-plugin').shadowRoot.querySelector('.channels-db-list');
+        this.channelsJson.forEach((channel: any, index: number) => {
+            const li = document.createElement('li');
+            const mainDiv = document.createElement('div');
+            const numberDiv = document.createElement('div');
+            numberDiv.innerHTML += `#${index + 1}`;
+            mainDiv.appendChild(numberDiv);
+
+            const infoDiv = document.createElement('div');
+
+            const lengthSpan = document.createElement('span');
+            lengthSpan.setAttribute('class', 'hint--bottom');
+            lengthSpan.setAttribute('data-hint', 'Length of the channel [&#8491;].');
+            lengthSpan.innerHTML += "Length: "
+
+            let bold = document.createElement('b');
+            bold.appendChild(lengthSpan);
+            infoDiv.appendChild(bold);
+
+            infoDiv.innerHTML += `${channel.Length || 1}&#8491`;
+
+            const delimiterSpan = document.createElement('span');
+            delimiterSpan.setAttribute('class', 'channels-db-delimiter');
+            delimiterSpan.innerHTML += '|';
+
+            infoDiv.appendChild(delimiterSpan);
+
+            const hpSpan = document.createElement('span');
+            hpSpan.setAttribute('class', 'hint--bottom hint--large');
+            hpSpan.setAttribute('data-hint', 'Channel\'s hydropathy is an average hydropathy index assigned to the lining residues according to the Kyte and Doolitle.');
+            hpSpan.innerHTML += "HPthy: "
+
+            bold = document.createElement('b');
+            bold.appendChild(hpSpan);
+            infoDiv.appendChild(bold);
+
+            infoDiv.innerHTML += `${channel.Properties.Hydropathy || 2}`
+            infoDiv.appendChild(delimiterSpan);
+
+            const chargeSpan = document.createElement('span');
+            chargeSpan.setAttribute('class', 'hint--bottom hint--large');
+            chargeSpan.setAttribute('data-hint', 'Charge is calculated as a sum of charged residues (Arg, Lys = +1; Asp, Glu = -1)');
+            chargeSpan.innerHTML += "Charge: ";
+
+            bold = document.createElement('b');
+            bold.appendChild(chargeSpan);
+            infoDiv.appendChild(bold);
+
+            infoDiv.innerHTML += `${channel.Properties.Charge > 0? '+' : ''}${channel.Properties.Charge}`;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.setAttribute('style', "float: right; font-weight: 200;");
+            nameSpan.innerHTML += `${channel.Name}`;
+
+            infoDiv.appendChild(nameSpan);
+
+            mainDiv.appendChild(infoDiv);
+            li.appendChild(mainDiv);
+
+            ul.appendChild(li);
+        });
+        // ul.appendChild(document.createElement('li'));
+        console.log();
+
     }
 }
 
