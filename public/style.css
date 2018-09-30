@@ -1,7 +1,7 @@
 body {
-    font-size: 14px;
     font-family: 'Open Sans', sans-serif;
     cursor: default;
+    margin: 8px;
 }
 
 /********************************************************************************************/
@@ -138,11 +138,11 @@ body {
 }
 
     .channels-db-channel-body > div:first-child {
-        position: absolute;
+        /*position: absolute;*/
         left: 0;
         top: 0;
         bottom: 0;
-        width: 8px;
+        /*width: 8px;*/
     }
 
 .channels-db-channel-body-content {
@@ -151,7 +151,7 @@ body {
 
 
 .channels-db-channel-layers-wrapper > div:first-child {
-    width: 70px;
+    width: 60px;
     background: #bdbdbd;
     float: left;
     text-align: center;
@@ -165,7 +165,7 @@ body {
 .channels-db-channel-layers {
     height: 20px;
     position: relative;
-    margin-left: 71px;
+    margin-left: 61px;
 }
 
     .channels-db-channel-layers > div {
@@ -240,7 +240,7 @@ body {
     position: absolute;
     top: 0;
     line-height: 22px;
-    width: 80px;
+    width: 95px;
     margin-left: 16px;
     border-right: 1px solid #cdcdcd;
 }
@@ -262,5 +262,5 @@ body {
     right: 0;
     left: 178px;
     top: 0;
-    margin-left: 20px;   
+    margin-left: 55px;
 }
