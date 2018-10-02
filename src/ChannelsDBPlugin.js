@@ -7,6 +7,7 @@ require("bootstrap/dist/css/bootstrap.css");
 class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
     constructor() {
         super(...arguments);
+        /** Dictionary for translating 3-letter AA abbreviations into 1-letter **/
         this.shortResidueNames = {
             ALA: "A",
             ARG: "R",
@@ -28,8 +29,11 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
             TYR: "Y",
             VAL: "V",
         };
+        /** Based on the input parameters create a subtitle for the ChannelsDB window. **/
         this.createSubtitle = function (channels) {
             let subtitle = '';
+            if (typeof channels[0] == 'undefined')
+                return subtitle;
             switch (channels[0].Type) {
                 case 0:
                     subtitle = "Reviewed";
@@ -49,6 +53,11 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
             return `${subtitle} ${this.channelsToPlural()}`;
         };
     }
+    /**
+     * Return lining residues of channel
+     * @param channel
+     * @param backbone
+     */
     calculateLining(channel, backbone) {
         let residueLining = channel.Layers.map(((x) => { return x.Residues; }));
         let union = [].concat.apply([], residueLining);
@@ -60,13 +69,16 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         return this.liningResiduesString(result);
     }
     ;
+    /**
+     * Makes string from lining residues
+     * @param residueLining
+     */
     liningResiduesString(residueLining) {
         let lining = {};
         let result = "";
         let uniqueResidues = ChannelsDBPlugin.distinctBy(residueLining, function (x) { return x['SequenceNumber'] + x['Chain']; });
         for (let i = 0; i < uniqueResidues.length; i++) {
             let name = uniqueResidues[i]['Name'];
-            let value = this.getShortResidueName(name);
             if (typeof lining[this.getShortResidueName(name)] == 'undefined') {
                 lining[this.getShortResidueName(name)] = 1;
             }
@@ -81,6 +93,10 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         return result.substring(0, result.length - 1);
     }
     ;
+    /**
+     * Translator from 3 letter residue name to one letter.
+     * @param name
+     */
     getShortResidueName(name) {
         let r = this.shortResidueNames[name];
         if (!r)
@@ -88,6 +104,11 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         return r;
     }
     ;
+    /**
+     * Custom distinct by function for filtering out residues which are occuring in the channels walls repeatedly.
+     * @param data
+     * @param key
+     */
     static distinctBy(data, key) {
         let elements = {};
         let result = [];
@@ -100,16 +121,17 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         }
         return result;
     }
+    /** Add s to end if there is more than one channel**/
     channelsToPlural() {
         return `channel${this.channelsJson.length > 0 ? 's' : ''}`;
     }
+    /** For each layer of a given channel calculates its width in the layer bar and respective color based on the HPthy index. **/
     prepareLayers(channel) {
         const minHpthy = -4.5;
         const medHpthy = 0.0;
         const maxHpthy = 4.5;
         let modifiedLayers = [];
-        const dt = 1 / (channel.Layers.length - 1);
-        let t = 0;
+        let t;
         const minColor = { r: 255, g: 0, b: 0 };
         const midColor = { r: 255, g: 255, b: 255 };
         const maxColor = { r: 0, g: 0, b: 255 };
@@ -126,7 +148,6 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         function formatColor(color) {
             return `rgb(${color.r},${color.g},${color.b})`;
         }
-        let index = 0;
         for (let l of channel.Layers) {
             let width = 100 * (l.EndDistance - l.StartDistance) / channel.Length;
             t = l.Properties.Hydropathy;
@@ -139,11 +160,13 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
         modifiedLayers[modifiedLayers.length - 1].computedWidth = modifiedLayers[modifiedLayers.length - 1].computedWidth + 100 - totalWidth - 0.0001;
         return modifiedLayers;
     }
+    /** Polymer method, called after initialization. **/
     connectedCallback() {
+        /*Download channel report, render after download is done. */
         const request = new XMLHttpRequest();
         let channels = [];
         request.open('GET', `https://webchem.ncbr.muni.cz/API/ChannelsDB/Component/${this.pdbId}`, true);
-        request.onload = function (req) {
+        request.onload = function () {
             if (request.readyState == 4) {
                 if (request.status == 200) {
                     channels = JSON.parse(request.response);
@@ -154,13 +177,15 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
                 }
             }
         };
+        /* Render, download image. */
         let callback = (() => {
             this.channelsJson = channels;
             ChannelsDBPlugin.channelsList = channels;
             this.subtitle = this.createSubtitle(this.channelsJson);
             this.imgSrc = `https://webchem.ncbr.muni.cz/API/ChannelsDB/Download/${this.pdbId}?type=png`;
             super.connectedCallback();
-            this.addChannelsReview();
+            if (Object.keys(this.channelsJson).length != 0)
+                this.addChannelsReview();
         });
         request.send(null);
     }
@@ -173,12 +198,14 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
             }
         };
     }
+    /** Main template for polymer element. **/
     static get template() {
         // language=HTML
         return polymer_element_js_1.html `
             <style>
-                @import url( ../public/style.css )
+                @import url( style.css )
             </style>
+            
             <div class="channels-db-header">
             <span>
                 <span class="channels-db-id">[[pdbId]] | <small>[[channelsJson.length]] [[subtitle]]</small> &nbsp;&nbsp;&mdash;&nbsp;&nbsp;</span>ChannelsDB
@@ -193,7 +220,6 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
                 </div>
 
                 <div class="channels-db-right-pane">
-                    <!--<div ng-show="isError" class="channels-db-right-pane-error">Error: {{error}}</div>-->
 
                     <ul class="channels-db-list">
                         
@@ -208,27 +234,33 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
             </div>
         `;
     }
+    /**
+     * Add channels review to template, using d3.
+     */
     addChannelsReview() {
-        let ul = document.querySelector('channelsdb-plugin').shadowRoot.querySelector('.channels-db-list');
         this.channelsJson.forEach((channel, index) => {
             let wrappedLayers = this.prepareLayers(channel);
             const mainLi = d3.select(document.querySelector('channelsdb-plugin').shadowRoot.querySelector('.channels-db-list'))
                 .append('li');
             const mainDiv = mainLi.append('div');
             mainDiv.append('div').text(`#${index + 1}`);
-            const sumInfoDiv = mainDiv.append('div').attr('class', 'hint--bottom');
-            sumInfoDiv.append('b').text(`Length: `);
+            const sumInfoDiv = mainDiv.append('div');
+            sumInfoDiv.append('b').text(`Length: `)
+                .attr('class', 'hint--bottom')
+                .attr('data-hint', 'Length of the channel [\u212b].');
             sumInfoDiv.append('span')
-                .attr('data-hint', 'Length of the channel [\u212b].').text(`${Number(channel.Length).toFixed(1) || 1}\u212b`);
+                .text(` ${Number(channel.Length).toFixed(1) || 1}\u212b`);
             sumInfoDiv.append('span').classed('channels-db-delimiter', true).text(' | ');
-            sumInfoDiv.append('b').text('HPthy: ');
-            sumInfoDiv.append('span').classed('hint--bottom hint--large', true)
-                .attr('data--hint', 'Channel\'s hydropathy is an average hydropathy index assigned to the lining residues according to the Kyte and Doolitle.')
+            sumInfoDiv.append('b').text('HPthy: ').attr('class', 'hint--bottom hint--large')
+                .attr('data-hint', 'Channel\'s hydropathy is an average hydropathy ' +
+                'index assigned to the lining residues according to the Kyte and Doolitle.');
+            sumInfoDiv.append('span')
                 .text(`${Number(channel.Properties.Hydropathy).toFixed(2) || 2}`);
             sumInfoDiv.append('span').classed('channels-db-delimiter', true).text(' | ');
-            sumInfoDiv.append('b').text('Charge: ');
-            sumInfoDiv.append('span').classed('hint--bottom hint--large', true)
-                .attr('data--hint', 'Charge is calculated as a sum of charged residues (Arg, Lys = +1; Asp, Glu = -1)')
+            sumInfoDiv.append('b').text('Charge: ').classed('hint--bottom hint--large', true)
+                .attr('data-hint', 'Charge is calculated as a sum of charged residues ' +
+                '(Arg, Lys = +1; Asp, Glu = -1)');
+            sumInfoDiv.append('span')
                 .text(`${Number(channel.Properties.Charge) > 0 ? '+' : ''}${channel.Properties.Charge}`);
             sumInfoDiv.append('span').text(`${channel.Name}`).attr('style', 'float: right; font-weight: 200;');
             const bodyContent = mainLi.append('div').attr('class', 'channels-db-channel-body')
@@ -237,7 +269,9 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
             bottleneck.append('b').text('Bottleneck: ');
             bottleneck.append('span').attr('class', 'hint--bottom')
                 .attr('data-hint', 'Channels\'s lowest profile: radius / length')
-                .text(`${Number(channel.Bottleneck.MinRadius).toFixed(2) || 1} / ${(Number(channel.Bottleneck.EndDistance) - Number(channel.Bottleneck.StartDistance)).toFixed(2)}`);
+                .text(`${Number(channel.Bottleneck.MinRadius).toFixed(2) || 1} / 
+                ${(Number(channel.Bottleneck.EndDistance) - Number(channel.Bottleneck.StartDistance))
+                .toFixed(2)}`);
             bottleneck.append('span').classed('channels-db-delimiter', true).text(' | ');
             bottleneck.append('span').attr('class', 'hint--bottom').attr('data-hint', 'Hydropathy of the bottleneck.')
                 .text(`${Number(channel.Bottleneck.Properties.Hydropathy) || 2}`);
@@ -258,10 +292,11 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
                 .attr('data-hint', 'The channel is uniformly divided into layers, and each layer is defined by the residues lining it. A new layer starts whenever there is a change in the list of residues lining the channel along its length.')
                 .text('Layers');
             const layersDiv = layers.append('div').attr('class', 'channels-db-channel-layers');
-            wrappedLayers.forEach((layer, index) => {
-                let singleLayer = layersDiv.append('div').attr('style', `width: ${layer.computedWidth}%; background-color: ${layer.color};
-                     border-bottom: ${layer.layer.LocalMinima ? '3px' : '0'} solid ${layer.layer.Bottleneck ? 'black' : '	#666666;' +
-                    'display:inline-block;margin-left:'}${index == 0 ? '0' : '1px'}`);
+            wrappedLayers.forEach((layer) => {
+                let singleLayer = layersDiv.append('div')
+                    .attr('style', `width: ${layer.computedWidth}%; background-color: ${layer.color};
+                     border-bottom: ${layer.layer.LocalMinima ? '3px' : '0'} solid 
+                     ${layer.layer.Bottleneck ? 'black' : '	#666666; display:inline-block'}`);
                 let layerInfoDiv = singleLayer.append('div').attr('class', 'channels-db-channel-layer-info');
                 let infoUnit = layerInfoDiv.append('div').attr('class', 'channels-db-channel-layer-info-unit')
                     .attr('style', 'left: 0');
@@ -270,17 +305,18 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
                 small.append(`text`).text(`${Number(layer.layer.MinRadius).toFixed(1) || 1}\u212b`);
                 small = infoUnit.append('div').append('small');
                 small.append('b').text('Length: ');
-                small.append(`text`).text(`${Number(layer.layer.EndDistance - layer.layer.StartDistance).toFixed(1) || 1}\u212b`);
+                small.append(`text`).text(`${Number(layer.layer.EndDistance - layer.layer.StartDistance)
+                    .toFixed(1) || 1}\u212b`);
                 infoUnit = layerInfoDiv.append('div').attr('style', 'left: 111px')
                     .attr('class', 'channels-db-channel-layer-info-unit');
                 small = infoUnit.append('div').append('small');
                 small.append('b').text('HPthy ');
                 small.append(`text`).text(`${Number(layer.layer.Properties.Hydropathy).toFixed(2) || 2}`);
                 small = infoUnit.append('div').append('small');
-                ``;
                 small.append('b').text('Charge: ');
                 small.append(`text`).text(`${layer.layer.Properties.Charge > 0 ? '+' : ''}${Number(layer.layer.Properties.Charge).toFixed(1)}`);
-                let infoResidue = layerInfoDiv.append('div').attr('class', 'channels-db-channel-layer-info-residues');
+                let infoResidue = layerInfoDiv.append('div')
+                    .attr('class', 'channels-db-channel-layer-info-residues');
                 layer.layer.Residues.forEach((residue, index) => {
                     if (residue.Backbone == true) {
                         infoResidue.append('small').append('b').append('span').attr('class', 'hint--top')
@@ -293,145 +329,12 @@ class ChannelsDBPlugin extends polymer_element_js_1.PolymerElement {
                             ${residue.SequenceNumber}${residue.Chain}${layer.layer.Residues.length - 1 == index ? '' : ' \u2013 '}`);
                     }
                 });
-                // infoResidue.append('div').attr('class', 'channels-db-channel-layer-info-bottleneck')
-                //     .text('Bottleneck');
-                // infoResidue.append('div').attr('class', 'channels-db-channel-layer-info-bottleneck')
-                //     .text('Local minimum');
                 layerInfoDiv.append('div').attr('style', `background: ${layer.color}`);
             });
-            // const li = document.createElement('li');
-            // const mainDiv = document.createElement('div');
-            // const numberDiv = document.createElement('div');
-            // numberDiv.innerHTML += `#${index + 1}`;
-            // mainDiv.appendChild(numberDiv);
-            //
-            //
-            // const infoDiv = document.createElement('div');
-            // infoDiv.innerHTML = `<div>
-            //                         <b>
-            // 			<span class="hint--bottom" data-hint="Length of the channel [&#8491;].">
-            // 				Length:
-            // 			</span>
-            //                         </b>
-            //
-            //                         ${channel.Length || 1}&#8491;
-            //
-            //                         <span class="channels-db-delimiter">|</span>
-            //
-            //                         <b>
-            // 			<span class="hint--bottom hint--large" data-hint="Channel's hydropathy is an average hydropathy index assigned to the lining residues according to the Kyte and Doolitle.">
-            // 				HPthy:
-            // 			</span>
-            //                         </b>
-            //                         ${channel.Properties.Hydropathy || 2}
-            //
-            //                         <span class="channels-db-delimiter">|</span>
-            //                         <b>
-            // 			<span class="hint--bottom hint--large" data-hint="Charge is calculated as a sum of charged residues (Arg, Lys = +1; Asp, Glu = -1)">
-            // 				Charge:
-            // 			</span>
-            //                         </b>
-            //                         ${channel.Properties.Charge > 0? '+': ''}${channel.Properties.Charge}
-            //                         <span style="float: right; font-weight: 200;">${channel.Name}</span>
-            //                     </div>`;
-            //
-            //
-            // const channelBodyDiv = document.createElement('div');
-            // channelBodyDiv.setAttribute('class', 'channels-db-channel-body');
-            //
-            // channelBodyDiv.innerHTML += `
-            //     <div class="channels-db-channel-body-content">
-            //         <div style="position: relative; display: inline-block">
-            //                                     <b>
-            //                 Bottleneck:
-            //                 </b>
-            //             <span class="hint--bottom" data-hint="Channels's lowest profile: radius / length">
-            //                 ${Number(channel.Bottleneck.MinRadius).toFixed(2) || 1} / ${Number(channel.Bottleneck.EndDistance - channel.Bottleneck.StartDistance).toFixed(2) || 1}
-            //             </span>
-            //             <span class="channels-db-delimiter">|</span>
-            //                             <span class="hint--bottom" data-hint="Hydropathy of the bottleneck.">
-            // 				${Number(channel.Bottleneck.Properties.Hydropathy).toFixed(2) || 2}
-            // 			</span>
-            //                             <span class="channels-db-delimiter">|</span>
-            //                             <span class="hint--bottom" data-hint="Formal charge of the bottleneck.">
-            // 				${Number(channel.Properties.Charge) > 0 ? '+': ''} ${Number(channel.Bottleneck.Properties.Charge).toFixed(2)}
-            // 			</span>
-            //                             <span class="channels-db-delimiter">|</span>
-            //                             <span class="hint--bottom" data-hint="Bottleneck lining residues.">
-            // 				${this.liningResiduesString(channel.Bottleneck.Residues) || 'cut:true:10:\' ...\''}
-            // 			</span>
-            //         </div>
-            //     </div>
-            // `;
-            //
-            // const layersDiv = document.createElement('div');
-            // layersDiv.setAttribute('class', 'channels-db-channel-layers');
-            // layersDiv.innerHTML = `
-            //                     <div class="hint--right hint--large" data-hint="The channel is uniformly divided into layers, and each layer is defined by the residues lining it. A new layer starts whenever there is a change in the list of residues lining the channel along its length.">
-            //                         Layers
-            //                     </div>
-            //
-            //                     <div class="channels-db-channel-layers">
-            //                         <!--<div ng-repeat="layer in channel.wrappedLayers"-->
-            //                              style="width: {{ layer.computedWidth }}%; background-color:{{ layer.color }};
-            // 					 border-bottom: {{layer.layer.LocalMinima ? '3px' : '0'}} solid {{layer.layer.Bottleneck ? 'black' : '	#666666'}}">
-            //
-            //                             <div class="channels-db-channel-layer-info">
-            //                                 <div style="left: 0;" class="channels-db-channel-layer-info-unit">
-            //                                     <div><small><b>Radius:</b> {{layer.layer.MinRadius | number: 1}}&#8491;</small></div>
-            //                                     <div><small><b>Length:</b> {{layer.layer.EndDistance - layer.layer.StartDistance | number: 1}}&#8491;</small></div>
-            //                                 </div>
-            //                                 <div style="left: 96px;" class="channels-db-channel-layer-info-unit">
-            //                                     <div><small><b>Hpthy:</b> {{layer.layer.Properties.Hydropathy | number: 2}}</small></div>
-            //                                     <div><small><b>Charge:</b> {{layer.layer.Properties.Charge > 0? '+': ''}}{{layer.layer.Properties.Charge}}</small></div>
-            //                                 </div>
-            //                                 <div class="channels-db-channel-layer-info-residues">
-            // 					<!--<span ng-repeat="residue in layer.layer.Residues">-->
-            // 						<!--
-            // 						-->
-            // 						<!--<small ng-if="residue.Backbone">-->
-            // 							<!--
-            // 							-->
-            // 							<b>
-            // 								<!--
-            // 								-->
-            // 								<span class="hint--top" data-hint="Backbone">
-            // 									<!--
-            // 									-->
-            // 									{{residue.Name}} {{residue.SequenceNumber}}{{residue.Chain}}{{$last? '' : ' &ndash; '}}
-            //                                         <!--
-            //                                         -->
-            // 								</span>
-            //                                     <!--
-            //                                     -->
-            // 							</b>
-            //                                 <!--
-            //                                 -->
-            // 						</small>
-            //                             <!--
-            //                             -->
-            // 						<!--<small ng-if="!residue.Backbone">{{residue.Name}} {{residue.SequenceNumber}}{{residue.Chain}}{{$last? '' : ' &ndash; '}}</small>-->
-            //                             <!--
-            //                             -->
-            // 					</span>
-            //                                     <!--<div ng-show="{{layer.layer.Bottleneck}}" class="channels-db-channel-layer-info-bottleneck">Bottleneck</div>-->
-            //                                     <!--<div ng-show="{{layer.layer.LocalMinima && !layer.layer.Bottleneck}}" class="channels-db-channel-layer-info-bottleneck">Local minimum</div>-->
-            //                                 </div>
-            //                                 <div style="background: {{ layer.color }}"></div>
-            //                             </div>
-            //
-            // </div>`
-            // mainDiv.appendChild(infoDiv);
-            // mainDiv.appendChild(channelBodyDiv);
-            // // mainDiv.appendChild(layersDiv);
-            // li.appendChild(mainDiv);
-            //
-            // ul.appendChild(li);
         });
-        // ul.appendChild(document.createElement('li'));
-        console.log();
     }
 }
+/** Wrapper around the Layer object -- adds color and width for generating rectangles in the UI. */
 class LayerWrapper {
     constructor(computedWidth, color, layer) {
         this.computedWidth = computedWidth;
